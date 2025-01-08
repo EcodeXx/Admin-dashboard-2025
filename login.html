@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Log In</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="Coderthemes" name="author" />
+    <link rel="shortcut icon" href="assets/images/users/avatar-1.png">
+    <link href="assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style"/>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+</head>
+
+<body class="loading authentication-bg" data-layout-config='{"darkMode":false}'>
+    <div class="account-pages pt-2 pt-sm-5 pb-4 pb-sm-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-xxl-4 col-lg-5">
+                    <div class="card">
+                        <div class="card-header pt-4 pb-4 text-center bg-primary">
+                            <a href="login.html">
+<span>
+    <img src="assets/images/users/avatar-1.png" alt="" height="50">
+</span><span style="color: white;">CoopTrak</span>
+
+                            </a>
+                        </div>
+
+                        <div class="card-body p-4">
+                            <div class="text-center w-75 m-auto">
+                                <h4 class="text-dark-50 text-center pb-0 fw-bold">Sign In</h4>
+                                <p class="text-muted mb-4">Enter your email and password to access the admin panel.</p>
+                            </div>
+
+                            <form id="loginForm">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email address</label>
+                                    <input class="form-control" type="email" id="email" required placeholder="Enter your email">
+                                </div>
+
+                                <div class="mb-3">
+                                    <a href="pages-recoverpw.html" class="text-muted float-end"><small>Forgot your password?</small></a>
+                                    <label for="password" class="form-label">Password</label>
+                                    <div class="input-group input-group-merge">
+                                        <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
+                                        <div class="input-group-text" data-password="false">
+                                            <span class="password-eye"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="checkbox-signin" checked>
+                                        <label class="form-check-label" for="checkbox-signin">Remember me</label>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3 mb-0 text-center">
+                                    <button class="btn btn-primary" type="submit">Log In</button>
+                                </div>
+
+                                <div class="mt-3 text-center" id="login-status"></div>
+                            </form>
+                        </div> <!-- end card-body -->
+                    </div> <!-- end card -->
+
+                    <div class="row mt-3">
+                        <div class="col-12 text-center">
+                            <p class="text-muted">Don't have an account? <a href="register.html" class="text-muted ms-1"><b>Sign Up</b></a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer footer-alt">
+        <script>document.write(new Date().getFullYear())</script> © cooperative - cooptrak.com
+    </footer>
+
+    <!-- Firebase Configuration and Authentication -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCdzQP6n7gw8T82h2Qg-cLfnLbEqJ4WONg",
+            authDomain: "caps-62ee2.firebaseapp.com",
+            databaseURL: "https://caps-62ee2-default-rtdb.firebaseio.com",
+            projectId: "caps-62ee2",
+            storageBucket: "caps-62ee2.appspot.com",
+            messagingSenderId: "407248916382",
+            appId: "1:407248916382:web:104a66db2e652789e2d08f",
+            measurementId: "G-2Y9GYDHFVM"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        document.getElementById("loginForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    if (user.emailVerified) {
+                        // Check if the user is an admin
+                        return database.ref("admins/" + user.uid).once("value");
+                    } else {
+                        // Inform the user that their email is not verified
+                        document.getElementById("login-status").innerHTML = '<p class="text-danger">Please verify your email before logging in.</p>';
+                        auth.signOut(); // Optional: sign out the user if email is not verified
+                        throw new Error("Email not verified");
+                    }
+                })
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        // Redirect to the admin dashboard after successful login
+                        window.location.href = "index.html";
+                    } else {
+                        // Inform the user they are not an admin
+                        document.getElementById("login-status").innerHTML = '<p class="text-danger">You are not authorized to access this admin panel.</p>';
+                        auth.signOut(); // Sign out if they are not an admin
+                    }
+                })
+                .catch((error) => {
+                    const errorMessage = error.message;
+                    document.getElementById("login-status").innerHTML = `<p class="text-danger">${errorMessage}</p>`;
+                });
+        });
+    </script>
+
+    <!-- Additional Scripts -->
+    <script src="assets/js/vendor.min.js"></script>
+    <script src="assets/js/app.min.js"></script>
+</body>
+</html>
